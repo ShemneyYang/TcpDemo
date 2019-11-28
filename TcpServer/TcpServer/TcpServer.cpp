@@ -9,6 +9,7 @@
 #include <string>
 #include <Windows.h>
 #include <process.h>
+#include <time.h>
 
 #pragma comment(lib, "ws2_32.lib")
 
@@ -20,16 +21,17 @@ struct SThreadInfo
 	std::string strIP;
 };
 
+std::string getSysTime(void);
 unsigned __stdcall threadProc(LPVOID lpParam);
 
 int main()
 {
-	std::cout << "Start TCP Server!!!!!!!!" << endl;
+	std::cout << getSysTime().c_str() << ">>Start TCP Server!" << endl;
 	WSADATA wsaData = { 0 };
 	int err = WSAStartup(MAKEWORD(2, 2), &wsaData);
 	if (err != NO_ERROR) 
 	{
-		std::cout << "Error!! Failed to WSAStartup, err=" << WSAGetLastError() << endl;
+		std::cout << getSysTime().c_str() << ">>Error!! Failed to WSAStartup, err=" << WSAGetLastError() << endl;
 		return 1;
 	}
 
@@ -42,27 +44,27 @@ int main()
 
 	if (SOCKET_ERROR == bind(sockSrv, (SOCKADDR*)&addrSrv, sizeof(SOCKADDR)))
 	{
-		std::cout << "Error!! Failed to bind, err=" << WSAGetLastError() << endl;
+		std::cout << getSysTime().c_str() << ">>Error!! Failed to bind, err=" << WSAGetLastError() << endl;
 		return 1;
 	}
 
 	if (SOCKET_ERROR == listen(sockSrv, 5))
 	{
-		std::cout << "Error!! Failed to listen, err=" << WSAGetLastError() << endl;
+		std::cout << getSysTime().c_str() << ">>Error!! Failed to listen, err=" << WSAGetLastError() << endl;
 		return 1;
 	}
 
 	SOCKADDR_IN addrClient;
 	int len = sizeof(SOCKADDR);
 
-	std::cout << "Start TCP accept!!!!!!!!" << endl;
+	std::cout << getSysTime().c_str() << ">>Start TCP accept!" << endl;
 	while (true)
 	{
 		SOCKET sockConn = accept(sockSrv, (SOCKADDR*)&addrClient, &len);
 		char cBuf[256] = { 0 };
 		sprintf_s(cBuf, 256, "%s", inet_ntoa(addrClient.sin_addr));
 		//send(sockConn, sendBuf, strlen(sendBuf) + 1, 0);
-		std::cout << "Hello IP=" << cBuf << std::endl;
+		std::cout << getSysTime().c_str() << ">>IP=" << cBuf << " connected!" << std::endl;
 
 		SThreadInfo* lpParam = new SThreadInfo();
 		lpParam->socket = sockConn;
@@ -85,21 +87,34 @@ unsigned __stdcall threadProc(LPVOID lpParam)
 		if (nRet > 0)
 		{
 			recvBuf[nRet] = '\0';
-			std::cout << "IP:" << pThreadInfo->strIP.c_str() << ",data=" << recvBuf << endl;
+			std::cout << getSysTime().c_str() << ">>IP:" << pThreadInfo->strIP.c_str() << ",data=" << recvBuf << endl;
 			send(socket, recvBuf, strlen(recvBuf) + 1, 0);
 		}
 		else if (nRet == 0)
 		{
+			std::cout << getSysTime().c_str() << ">>IP:" << pThreadInfo->strIP.c_str() << " close!!!!!!" << endl;
 			bExit = true;
 		}
 		else
 		{
-			std::cout << "Error!! Failed to recv, err=" << WSAGetLastError() << endl;
+			std::cout << getSysTime().c_str() << ">>Error!! Failed to recv, err=" << WSAGetLastError() << endl;
 			bExit = true;
 		}
 	}
-	std::cout << "IP:" << pThreadInfo->strIP.c_str() << " close!!!!!!" << endl;
 	closesocket(socket);
 	delete pThreadInfo;
 	return 0;
+}
+
+std::string getSysTime(void)
+{
+	struct tm localTime;
+    time_t t = 0;
+    t = time(NULL);
+	localtime_s(&localTime, &t);
+	char cBuf[64] = { 0 };
+    sprintf_s(cBuf, 64, "%02d:%02d:%02d", localTime.tm_hour, localTime.tm_min, localTime.tm_sec);
+	return cBuf;
+// 	localTime = gmtime(&t);
+//     printf("UTC hour is: %d/n", local->tm_hour);
 }
