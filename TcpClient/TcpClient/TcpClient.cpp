@@ -20,7 +20,7 @@ int main()
 	SOCKET sockClient = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 
 	SOCKADDR_IN addrSrv;
-	addrSrv.sin_addr.S_un.S_addr = inet_addr("127.0.0.1");
+	addrSrv.sin_addr.S_un.S_addr = inet_addr("127.0.0.1"/*"172.26.65.17"*/);
 	addrSrv.sin_family = AF_INET;
 	addrSrv.sin_port = htons(8866);
 	connect(sockClient, (SOCKADDR*)&addrSrv, sizeof(SOCKADDR));
