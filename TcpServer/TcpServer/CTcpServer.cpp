@@ -116,6 +116,7 @@ unsigned __stdcall CTcpServer::serverThreadProc(void* lpParam)
 	CTcpServer* _this = (CTcpServer*)lpParam;
 	_this->_onServerRuning();
 	std::cout << "Server Thread exited, id=" << GetCurrentThreadId() << endl;
+	_endthread();
 	return 0;
 }
 
@@ -127,6 +128,7 @@ unsigned __stdcall CTcpServer::clientThreadProc(void* lpParam)
 	pThreadInfo->_this->_onClientRuning(pThreadInfo);
 	delete pThreadInfo;
 	std::cout << "Client Thread exited, id=" << GetCurrentThreadId() << ",ip=" << strIP.c_str() << endl;
+	_endthread();
 	return 0;
 }
 
